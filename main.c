@@ -1,137 +1,153 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#define MAX_ALUNOS 50
 
-
-typedef struct _livro {
-    char titulo[100];
-    unsigned int num_paginas;
-    float preco;
-} Livro;
-
-
-
-typedef struct _aluno {
-    char nome[100];
-    int idade;
-    Livro *livro_fav;
+typedef struct {
+  char nome[50];
+  float notas[4];
+  int ativo;
 } Aluno;
 
+Aluno alunos[MAX_ALUNOS];
 
+void menu();
+void cadastrar();
+void remover();
+void reprovados();
+void pesquisar();
+void listar();
 
-Livro *create_livro(const char *titulo, unsigned int num_paginas,
-                    float preco) {
-    Livro *livro = (Livro *) calloc(1, sizeof(Livro));
-
-    strcpy(livro->titulo, titulo);
-    livro->num_paginas = num_paginas;
-    livro->preco = preco;
-
-    return livro;
+int main(int argc, char const *argv[]) {
+  menu();
+  return 0;
 }
 
+void menu() {
+  int op;
 
-void destroy_livro(Livro **livro_ref) {
-    Livro *livro = *livro_ref;
-    free(livro);
-    *livro_ref = NULL;
-}
+  do {
+    system("clear");
+    printf("\n1 - Cadastrar aluno\n2 - Remover aluno");
+    printf("\n3 - Alunos reprovados\n4 - Pesquisar aluno\n5 - Listar");
+    printf("\n0 - Sair\n");
+    scanf("%d", &op);
+    getchar();
 
-
-Livro *copy_livro(const Livro *livro) {
-    return create_livro(livro->titulo, livro->num_paginas,
-                        livro->preco);
-}
-
-
-
-void print_livro(const Livro *livro) {
-    printf("Titulo: %s\n", livro->titulo);
-    printf("Num Paginas: %d\n", livro->num_paginas);
-    printf("Preco: R$ %.2f\n\n", livro->preco);
-}
-
-
-
-Aluno *create_aluno(const char *nome, int idade,
-                    const Livro *livro_fav) {
-    Aluno *aluno = (Aluno *) calloc(1, sizeof(Aluno));
-
-    strcpy(aluno->nome, nome);
-    aluno->idade = idade;
-    aluno->livro_fav = copy_livro(livro_fav);
-
-    return aluno;
-}
-
-
-void destroy_aluno(Aluno **aluno_ref) {
-    Aluno *aluno = *aluno_ref;
-
-    destroy_livro(&aluno->livro_fav);
-    free(aluno);
-    *aluno_ref = NULL;
-}
-
-
-void print_aluno(const Aluno *aluno) {
-    printf("Nome: %s\n", aluno->nome);
-    printf("Idade: %d\n", aluno->idade);
-    puts("Livro Favorito");
-    puts("-----");
-    print_livro(aluno->livro_fav);
-}
-
-bool livros_sao_iguais(const Livro *livro_1,
-                       const Livro *livro_2) {
-    if (strcmp(livro_1->titulo, livro_2->titulo) == 0) {
-        return true;
+    switch (op) {
+    case 1:
+      cadastrar();
+      break;
+    case 2:
+      remover();
+      break;
+    case 4:
+      pesquisar();
+      break;
+    case 5:
+      listar();
+      break;
     }
-    else {
-        return false;
-    }
+    getchar();
+  } while (op != 0);
 }
 
+void cadastrar() {
+  char nome[50];
+  float notas[4];
+  int op;
+  FILE *file;
 
+  do {
+    printf("\nNome: ");
+    fgets(nome, sizeof(nome), stdin);
+    printf("\n1 Bimestre: ");
+    scanf("%f", &notas[0]);
+    printf("\n2 Bimestre: ");
+    scanf("%f", &notas[1]);
+    printf("\n3 Bimestre: ");
+    scanf("%f", &notas[2]);
+    printf("\n4 Bimestre: ");
+    scanf("%f", &notas[3]);
 
-int main() {
-    Livro *livro_harry = create_livro("Harry Potter 1",
-                                200, 25);
+    for (int i = 0; i < MAX_ALUNOS; i++) {
+      if (alunos[i].ativo == 0) {
+        alunos[i].notas[0] = notas[0];
+        alunos[i].notas[1] = notas[1];
+        alunos[i].notas[2] = notas[2];
+        alunos[i].notas[3] = notas[3];
+        strcpy(alunos[i].nome, nome);
+        getchar();
+        alunos[i].ativo = 1;
 
-    print_livro(livro_harry);
-    livro_harry->preco = 10;
-    print_livro(livro_harry);
-
-    Aluno *ted = create_aluno("Ted", 20, livro_harry);
-    print_aluno(ted);
-
-    puts("\nted->livro_fav == livro_harry");
-    puts("os exemplares sao iguais?");
-    if (ted->livro_fav == livro_harry) {
-        puts("TRUE");
+        file = fopen("listaDeAlunos.txt", "a");
+        fprintf(file, "Nome do Aluno: %s\n", alunos[i].nome);
+        fprintf(file, "Nota 1 : %.2f\n", alunos[i].notas[0]);
+        fprintf(file, "Nota 2 : %.2f\n", alunos[i].notas[1]);
+        fprintf(file, "Nota 3 : %.2f\n", alunos[i].notas[2]);
+        fprintf(file, "Nota 4 : %.2f\n", alunos[i].notas[3]);
+        fprintf(file, "Matricula : %d\n", 1 + i);
+        fprintf(file,
+                "-------------------------------------------------------\n");
+        fclose(file);
+        break;
+      }
     }
-    else {
-        puts("FALSE");
+    printf("\nAluno cadastrado com sucesso!");
+    printf("\n1 - Continuar cadastrando\n2 e Enter - Sair\n");
+    scanf("%d", &op);
+    getchar();
+  } while (op != 2);
+}
+void listar() {
+  system("clear");
+  printf("n Lista de alunos");
+  for (int i = 0; i < MAX_ALUNOS; ++i) {
+
+    if (alunos[i].ativo == 1) {
+      printf("Nome: %s\n", alunos[i].nome);
+      printf("Matricula: %d\n", i + 1);
+      printf("1 Bim: %0.2f\n", alunos[i].notas[0]);
+      printf("2 Bim: %0.2f\n", alunos[i].notas[1]);
+      printf("3 Bim: %0.2f\n", alunos[i].notas[2]);
+      printf("4 Bim: %0.2f\n", alunos[i].notas[3]);
+
+      printf("\n ------------------- \n");
     }
-    puts("\n");
+  }
+  getchar();
+}
+void remover() {
+  int matricula;
+  listar();
+  getchar();
+  printf("\n Digite a matricula do aluno a ser  removido: \n");
+  scanf("%d", &matricula);
+  --matricula;
+  alunos[matricula].ativo = 0;
+  printf("\nAluno excluido com sucesso!\n");
+  getchar();
+}
+void pesquisar() {
+  char nome[50];
+  int op;
 
-
-    puts("\nlivros_sao_iguais");
-    puts("a obra é a mesma ?");
-    if (livros_sao_iguais(ted->livro_fav, livro_harry)) {
-        puts("TRUE");
+  do {
+    system("clear");
+    printf("\nDigite o nome do aluno: ");
+    fgets(nome, sizeof(nome), stdin);
+    for (int i = 0; i < MAX_ALUNOS; ++i) {
+      if (strstr(alunos[i].nome, nome) != NULL) {
+        printf("Matricula: %d\n", i + 1);
+        printf("Nome: %s\n", alunos[i].nome);
+        printf("1 Bim: %0.2f\n", alunos[i].notas[0]);
+        printf("2 Bim: %0.2f\n", alunos[i].notas[1]);
+        printf("3 Bim: %0.2f\n", alunos[i].notas[2]);
+        printf("4 Bim: %0.2f\n", alunos[i].notas[3]);
+      }
     }
-    else {
-        puts("FALSE");
-    }
-    puts("\n");
-
-    destroy_livro(&livro_harry);
-
-    print_aluno(ted);
-
-    destroy_aluno(&ted);
-
-    return 0;
+    printf("\nDigite 0 para sair ou 1 para nova pesquisa: ");
+    scanf("%d", &op);
+    getchar();
+  } while (op != 0);
 }
